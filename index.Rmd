@@ -1,6 +1,6 @@
 --- 
-title: "YOUR TITLE HERE"
-author: "YOUR NAMES HERE"
+title: "New York Housing"
+author: "Lingxuan Gu, Wenjie Xie, Winnie Gao"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 ---
