@@ -1,6 +1,6 @@
 --- 
 title: "New York Housing"
-author: "Lingxuan Gu, Wenjie Xie, Winnie Gao"
+author: "Winnie Gao, Lingxuan Gu, Wenjie Xie"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 ---
