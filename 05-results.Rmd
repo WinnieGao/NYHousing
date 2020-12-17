@@ -1,1 +1,57 @@
 # Results
+
+
+
+```{r}
+proj = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
+project = proj
+rent = read.csv("Local_Law_44_-_Unit_Income_Rent.csv", stringsAsFactors = TRUE, na.strings=c(" ", "","NA"))
+```
+
+```{r}
+library(naniar)
+library(forcats)
+# replace ---- as NAs
+# project = project %>% replace_with_na_all(condition = ~.x == "----")
+rent$MaxAllowableIncome = fct_relevel(rent$MaxAllowableIncome, "0%-30%", "31%-40%", "41%-50%", "51%-60%", "61%-65%", "66%-70%", "71%-80%", "81%-90%", "91%-100%")
+rent$MedianInitialLegalRent = as.numeric(gsub(",", "", rent$MedianActualRent))
+```
+
+```{r}
+# remove columns that around or more than 50% values are NAs
+project = subset(project, select = -c(BIN) )
+
+# remove rows with NAs
+project = na.omit(project)
+rent = na.omit(rent)
+```
+
+```{r}
+# merge two data sets together
+data = merge(project, rent, by.x = "Building.ID", by.y = "BuildingID")
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+proj$Project.Start.Date = as.Date(proj$Project.Start.Date, format ="%m/%d/%Y")
+proj$Project.Completion.Date = as.Date(proj$Project.Completion.Date, format ="%m/%d/%Y")
+data$Project.Completion.Date = as.Date(data$Project.Completion.Date, format ="%m/%d/%Y")
+
+project_num = data.frame("Year" = as.Date(cut(proj$Project.Start.Date, breaks = "month")), 
+                         "Project" = proj$Building.ID)
+
+project_num_df = project_num %>%
+  group_by(Year) %>%
+  count()
+
+ggplot(data = project_num_df, aes(x = Year, y = n)) + 
+  geom_line() +
+  geom_point() +
+  scale_x_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
+  xlab("Year") +
+  ylab("Number of Buildings Started") +
+  ggtitle("Number of Buildings Started per Month from 2014/01 to 2020/06") +
+  theme_grey(16)
+```
+
