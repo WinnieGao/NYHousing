@@ -1,1 +1,6 @@
 # Interactive component
+
+
+```{r, echo=FALSE}
+htmltools::includeHTML("inter.html")
+```
