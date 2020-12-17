@@ -28,10 +28,13 @@ The histogram includes all variables in the data set and we calculate the percen
 
 Now, we are going to look in to the patterns of missing values in each variables.
 
+
+**Patterns of Missing Values**
 ```{r}
 library(extracat)
 visna(rent, sort = "r")
 ```
+
 The plot shows that the missing patterns of the actual rent variables is not quite associated with values of other variables. However, we notice that there are big gaps in the graph, meaning that there are a number of consecutive rows with missing actual rent values. After look into the data set, we realize that the data with same project id will have either all missing values or no missing values in actual rent. It is reasonable to assume that the rows with missing actual values are from uncompleted projects. Since we more care about the information of apartments that are actually rented, we can directly remove these rows with missing actual rent.
 
 
@@ -41,7 +44,7 @@ na_perc = as.data.frame(apply(project, 2, function(col) sum(is.na(col)) / length
 na_perc$columns = as.factor(row.names(na_perc))
 row.names(na_perc) = 1:nrow(na_perc)
 names(na_perc) = c("percent", "columns")
-head(na_perc)
+#head(na_perc)
 
 ggplot(na_perc, aes(x = reorder(columns, -percent), y = percent))+
   geom_col()+
