@@ -7,7 +7,7 @@ We will first look at the Local Law 44 Unit Income Rent data.
 ```{r}
 library(ggplot2)
 rent = read.csv("Local_Law_44_-_Unit_Income_Rent.csv", stringsAsFactors = TRUE, na.strings=c(" ", "","NA"))
-proj = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
+project = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
 
 
 

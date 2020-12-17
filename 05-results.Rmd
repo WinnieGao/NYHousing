@@ -1,6 +1,6 @@
 # Results
 
-
+## T
 
 ```{r}
 proj = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
@@ -27,31 +27,150 @@ rent = na.omit(rent)
 ```
 
 ```{r}
-# merge two data sets together
-data = merge(project, rent, by.x = "Building.ID", by.y = "BuildingID")
-```
-
-```{r}
+library(tidyverse)
 library(dplyr)
 library(ggplot2)
+
 proj$Project.Start.Date = as.Date(proj$Project.Start.Date, format ="%m/%d/%Y")
 proj$Project.Completion.Date = as.Date(proj$Project.Completion.Date, format ="%m/%d/%Y")
-data$Project.Completion.Date = as.Date(data$Project.Completion.Date, format ="%m/%d/%Y")
 
+theme_dotplot <- theme_bw(10) +
+    theme(axis.text.y = element_text(size = rel(.75)),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size = rel(.75)),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_line(size = 0.5),
+        panel.grid.minor.x = element_blank())
+
+project_start = data.frame("Year" = as.Date(cut(proj$Project.Start.Date, breaks = "year")), 
+                         "Project" = proj$Building.ID)
+project_start = project_start %>%
+  group_by(Year) %>%
+  count()
+project_end = data.frame("Year" = proj$Project.Completion.Date, 
+                         "Project" = proj$Building.ID)
+project_end = project_end %>% drop_na()
+project_end$Year = as.Date(cut(project_end$Year, breaks = "year"))
+
+project_end = project_end %>%
+  group_by(Year) %>%
+  count()
+
+plot2 = merge(project_start, project_end, by = "Year", all.x = TRUE)
+plot2[is.na(plot2)] = 0
+
+tidydf = plot2 %>%
+  rename(Start = "n.x", Complete = "n.y",) %>%
+  gather(key = "Type", value = "Number", "Start", "Complete")
+tidydf$Year = as.Date(cut(tidydf$Year, breaks = "month"))
+
+ggplot(tidydf, aes(Number, Year, color = Type)) +
+  geom_point() + 
+  #scale_y_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
+  ggtitle("Number of projects started and completed in each year 2014-2020") + 
+  ylab("") +
+  theme_dotplot +
+  coord_flip()
+```
+
+From the dot plot on number of projects started and completed, we first notice that the number of projects started are roughly the same for previous 5 years and 2018 has highest number of projects started. The trend of number of projects completed has an obvious pattern: except for 2020, the number of projects completed increases by year. When carefully look into the data plot, we also see that the year of 2020 has the lowest number both on projects started and completed. There are two potential reasons. First, our data set has records up to 2020-09, meaning that, compared with previous years, 2020 have three more months to have projects started or completed so that the two dots can be higher in the plot if we review this plot after several months. However, However, based on the current data, even if the last three months of 2020 are recorded, the number of projects are still much smaller than previous years. Therefore, the second reason is that, the current COVID-19 situation has largely affected the process of each project.
+
+In order to verify our conjecture, we separate each dot in previous plot into 12 dots, each representing a month. To avoid having too many data points at the same plot, we plot number of project of started and completed into two different plots.
+
+
+
+```{r}
 project_num = data.frame("Year" = as.Date(cut(proj$Project.Start.Date, breaks = "month")), 
                          "Project" = proj$Building.ID)
+
+project_num_2 = data.frame("Year" = as.Date(cut(proj$Project.Completion.Date, breaks = "month")), 
+                         "Project" = proj$Building.ID)
+project_num_2 = na.omit(project_num_2) 
+
 
 project_num_df = project_num %>%
   group_by(Year) %>%
   count()
 
-ggplot(data = project_num_df, aes(x = Year, y = n)) + 
+project_num_df_2 = project_num_2 %>%
+  group_by(Year) %>%
+  count()
+
+#project_num_df_2
+
+ggplot(data = project_num_df, aes(x = Year, y = n, label = Year)) + 
   geom_line() +
   geom_point() +
+  #geom_text() +
+  #geom_text(size=0.5) + 
+  annotate(geom="text", x=as.Date("2014-06-01"), y=219, label="2014-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2014-12-01"), y=182, label="2014-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2015-06-01"), y=238, label="2015-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2015-12-01"), y=159, label="2015-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2016-06-01"), y=304, label="2016-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2016-12-01"), y=113, label="2016-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2017-06-01"), y=335, label="2017-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2017-12-01"), y=64, label="2017-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2018-06-01"), y=239, label="2018-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2018-12-01"), y=88, label="2018-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2019-06-01"), y=375, label="2019-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2019-12-01"), y=91, label="2019-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2020-03-01"), y=125, label="2020-03",
+              color="black") +
+  annotate(geom="text", x=as.Date("2020-06-01"), y=72, label="2020-06",
+              color="black") +
   scale_x_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
   xlab("Year") +
   ylab("Number of Buildings Started") +
   ggtitle("Number of Buildings Started per Month from 2014/01 to 2020/06") +
-  theme_grey(16)
+  theme_grey(11)
+
+ggplot(data = project_num_df_2, aes(x = Year, y = n, label = Year)) + 
+  geom_line() +
+  geom_point() +
+  #geom_text() +
+  #geom_text(size=0.5) + 
+  annotate(geom="text", x=as.Date("2014-06-01"), y=41, label="2014-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2015-06-01"), y=38, label="2015-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2015-12-01"), y=89, label="2015-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2016-06-01"), y=62, label="2016-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2016-12-01"), y=104, label="2016-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2017-06-01"), y=243, label="2017-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2017-12-01"), y=52, label="2017-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2018-07-01"), y=111, label="2018-07",
+              color="black") +
+  annotate(geom="text", x=as.Date("2018-12-01"), y=79, label="2018-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2019-06-01"), y=206, label="2019-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2019-12-01"), y=60, label="2019-12",
+              color="black") +
+  scale_x_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
+  xlab("Year") +
+  ylab("Number of Buildings Completed") +
+  ggtitle("Number of Buildings Completed per Month from 2014/01 to 2020/06") +
+  theme_grey(11)
 ```
+
+From the data we can see that, in the year of 2020, the trend before April is quite similar with that of previous years in both starting and completion plots. The number of projects started is even much larger in March than previous years. It makes sense because in previous plot we see an increasing trend in number of projects started by year. To have larger number projects started in 2020 we need to have larger number in each Month. However, the number drops a lot in April for both projects started and completed, which is the time COVID-19 situation becomes serious in NYC. Therefore, our thoughts that the process of projects is largely affected by the epidemic is confirmed here.\\
+We can also see an interesting pattern in these plots: the projects are mostly started in June and December, and the number started in June is larger than December. Similarly in plots with number completed, the projects are largely completed in summer and winter. Our explanation is that projects usually take 6 months or a whole year. But more rigorous analysis requires some domain knowledge in other fields such as archituecture. \\
 
