@@ -3,4 +3,5 @@
 
 ```{r, echo=FALSE}
 htmltools::includeHTML("inter.html")
+htmltools::includeScript("interactive.js")
 ```
