@@ -1,6 +1,6 @@
 # Results
 
-## Analysis of Number of Projects by Time
+## Analysis on Number of Projects by Time
 
 Walking on the streets of New York, we often find scaffolding on the side of the road, which means that the building near us is being built or remodeled. This kind of construction or reconstruction are happening in many places at the same time every day. We want to explore the changes in such projects in different statuses over previous several year in various aspects and to understand the pattern of apartments in New York so that we can have a better view about changes in this city over years.
 
