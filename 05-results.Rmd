@@ -1,6 +1,8 @@
 # Results
 
-## T
+## Analysis of Number of Projects by Time
+
+Walking on the streets of New York, we often find scaffolding on the side of the road, which means that the building near us is being built or remodeled. This kind of construction or reconstruction are happening in many places at the same time every day. We want to explore the changes in such projects in different statuses over previous several year in various aspects and to understand the pattern of apartments in New York so that we can have a better view about changes in this city over years.
 
 ```{r}
 proj = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
@@ -34,7 +36,7 @@ library(ggplot2)
 proj$Project.Start.Date = as.Date(proj$Project.Start.Date, format ="%m/%d/%Y")
 proj$Project.Completion.Date = as.Date(proj$Project.Completion.Date, format ="%m/%d/%Y")
 
-theme_dotplot <- theme_bw(10) +
+theme_dotplot <- theme_bw(13) +
     theme(axis.text.y = element_text(size = rel(.75)),
         axis.ticks.y = element_blank(),
         axis.title.x = element_text(size = rel(.75)),
@@ -67,7 +69,7 @@ tidydf$Year = as.Date(cut(tidydf$Year, breaks = "month"))
 ggplot(tidydf, aes(Number, Year, color = Type)) +
   geom_point() + 
   #scale_y_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
-  ggtitle("Number of projects started and completed in each year 2014-2020") + 
+  ggtitle("Number of projects started and completed each year 2014-2020") + 
   ylab("") +
   theme_dotplot +
   coord_flip()
@@ -134,8 +136,8 @@ ggplot(data = project_num_df, aes(x = Year, y = n, label = Year)) +
   scale_x_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
   xlab("Year") +
   ylab("Number of Buildings Started") +
-  ggtitle("Number of Buildings Started per Month from 2014/01 to 2020/06") +
-  theme_grey(11)
+  ggtitle("Number of Buildings Started per Month 2014/01-2020/06") +
+  theme_grey(13)
 
 ggplot(data = project_num_df_2, aes(x = Year, y = n, label = Year)) + 
   geom_line() +
@@ -167,10 +169,11 @@ ggplot(data = project_num_df_2, aes(x = Year, y = n, label = Year)) +
   scale_x_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
   xlab("Year") +
   ylab("Number of Buildings Completed") +
-  ggtitle("Number of Buildings Completed per Month from 2014/01 to 2020/06") +
-  theme_grey(11)
+  ggtitle("Number of Buildings Completed per Month 2014/01-2020/06") +
+  theme_grey(13)
 ```
 
-From the data we can see that, in the year of 2020, the trend before April is quite similar with that of previous years in both starting and completion plots. The number of projects started is even much larger in March than previous years. It makes sense because in previous plot we see an increasing trend in number of projects started by year. To have larger number projects started in 2020 we need to have larger number in each Month. However, the number drops a lot in April for both projects started and completed, which is the time COVID-19 situation becomes serious in NYC. Therefore, our thoughts that the process of projects is largely affected by the epidemic is confirmed here.\\
-We can also see an interesting pattern in these plots: the projects are mostly started in June and December, and the number started in June is larger than December. Similarly in plots with number completed, the projects are largely completed in summer and winter. Our explanation is that projects usually take 6 months or a whole year. But more rigorous analysis requires some domain knowledge in other fields such as archituecture. \\
+From the data we can see that, in the year of 2020, the trend before April is quite similar with that of previous years in both starting and completion plots. The number of projects started is even much larger in March than previous years. It makes sense because in previous plot we see an increasing trend in number of projects started by year. To have larger number projects started in 2020 we need to have larger number in each Month. However, the number drops a lot in April for both projects started and completed, which is the time COVID-19 situation becomes serious in NYC. Therefore, our thoughts that the process of projects is largely affected by the epidemic is confirmed here.
+
+We can also see an interesting pattern in these plots: the projects are mostly started in June and December, and the number started in June is larger than December. Similarly in plots with number completed, the projects are largely completed in summer and winter. Our explanation is that projects usually take 6 months or a whole year. But more rigorous analysis requires some domain knowledge in other fields such as archituecture.
 

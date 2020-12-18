@@ -3,6 +3,6 @@ data-sources
 data-transformation
 missing-values
 results
-t
+analysis-of-number-of-projects-by-time
 interactive-component
 conclusion
