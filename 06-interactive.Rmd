@@ -7,3 +7,5 @@ In this part, you can either choose the Areas or Room Type that you are interest
 htmltools::includeHTML("inter.html")
 htmltools::includeScript("interactive.js")
 ```
+
+Reference: https://towardsdatascience.com/better-data-visualization-using-beeswarm-chart-bb46a229c56b
