@@ -177,3 +177,12 @@ From the data we can see that, in the year of 2020, the trend before April is qu
 
 We can also see an interesting pattern in these plots: the projects are mostly started in June and December, and the number started in June is larger than December. Similarly in plots with number completed, the projects are largely completed in summer and winter. Our explanation is that projects usually take 6 months or a whole year. But more rigorous analysis requires some domain knowledge in other fields such as archituecture.
 
+## Analysis of the Median Actual Rent of the building
+
+In the discussion of house property, price is absolutely what people concerned the most. What is the relationship with the house rent price, the bedroom size of the house and the Income level?
+
+```{r pressure, echo=FALSE,out.width = "80%",fig.align='center'}
+knitr::include_graphics("Median Acrual Rent Facet by Max allowable Income.png")
+```
+
+Max Allowable Income known as MAI, refers to income limit for an affordable housing program with the maximum amount of income a household can earn to qualify to receive assistance. AMI that lower than 30% represents the extremely low income, 40% - 90% represents low income, 90% - 120% represents moderate income, 130% - 160% represents middle income, and > 170% represents high income. According to this graph, we observe that the family with MAI percentage lower than 90% are more likely to live in the houses with 3-4 bedrooms in NYC. The same bedroom size houses percentage decrease dramatically for family with MAI of 91% and higher percentage. At the same time, the studio percentage owned by 91% - 120% MAI increases a lot. For MAI percentage higher than 170%, we could see the disappear of 5- or 6-bedroom houses. So even the whole unit price of 4-6-bedroom houses is high, but it is more economical for a large family. And we discover that moderate income family are more likely to rent studio, which might because of the out-of-state students/single white collar who work in NYC.
