@@ -1,8 +1,0 @@
-introduction
-data-sources
-data-transformation
-missing-values
-results
-analysis-on-number-of-projects-by-time
-interactive-component
-conclusion
