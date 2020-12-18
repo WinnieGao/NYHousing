@@ -2,10 +2,9 @@
 
 In this part, you can either choose the Areas or Room Type that you are interested in by clicking on the rectangles or check boxes, and the corresponding dots will appear on the screen. It might take a while to render since we have a huge number of data. After the data appears, you can also move your mouse to different dots, on which Room Type, Borough name and Rent will be shown. Enjoy!
 
+Reference: https://towardsdatascience.com/better-data-visualization-using-beeswarm-chart-bb46a229c56b
 
 ```{r, echo=FALSE}
 htmltools::includeHTML("inter.html")
 htmltools::includeScript("interactive.js")
 ```
-
-Reference: https://towardsdatascience.com/better-data-visualization-using-beeswarm-chart-bb46a229c56b
