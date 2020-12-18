@@ -13,7 +13,7 @@ For this project, we would like to answer the following three questions:
 
 - What is the distribution of property values in New York City?
 
-- What suggestions would you make to people who would like to buy investment property in NYC? 
+- In New York City, what is the relationship between house rent price, bedroom size of the house and the income level?
 
 - Compared with previous several years, what changes in NYC Housing in terms of pricing, project activities, etc.?
 
