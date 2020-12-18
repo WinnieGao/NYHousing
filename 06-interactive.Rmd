@@ -1,5 +1,7 @@
 # Interactive component
 
+In this part, you can either choose the Areas or Room Type that you are interested in by clicking on the rectangles or check boxes, and the corresponding dots will appear on the screen. It might take a while to render since we have a huge number of data. After the data appears, you can also move your mouse to different dots, on which Room Type, Borough name and Rent will be shown. Enjoy!
+
 
 ```{r, echo=FALSE}
 htmltools::includeHTML("inter.html")
