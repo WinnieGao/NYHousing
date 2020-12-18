@@ -7,6 +7,10 @@ After observing the patterns of NA values, we can confirm that the columns with 
 Our data are recorded in two separate files with different features: one for rent related information and the other for geography and housing related information. Combining two data sets will allow us to have more insights on our information. Therefore, we also need to merge them by their building ID.
 
 ```{r}
+proj = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
+rent = read.csv("Local_Law_44_-_Unit_Income_Rent.csv", stringsAsFactors = TRUE, na.strings=c(" ", "","NA"))
+data = merge(project, rent, by.x = "Building.ID", by.y = "BuildingID")
+
 boxplot(data$MedianActualRent)
 #head(sort(data$MedianActualRent, decreasing = T), 10)
 ```
