@@ -1,8 +1,5 @@
 # Results
 
-## Analysis on Number of Projects by Time
-
-Walking on the streets of New York, we often find scaffolding on the side of the road, which means that the building near us is being built or remodeled. This kind of construction or reconstruction are happening in many places at the same time every day. We want to explore the changes in such projects in different statuses over previous several year in various aspects and to understand the pattern of apartments in New York so that we can have a better view about changes in this city over years.
 
 ```{r}
 proj = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
@@ -11,12 +8,9 @@ rent = read.csv("Local_Law_44_-_Unit_Income_Rent.csv", stringsAsFactors = TRUE, 
 ```
 
 ```{r}
-library(naniar)
 library(forcats)
-# replace ---- as NAs
-# project = project %>% replace_with_na_all(condition = ~.x == "----")
 rent$MaxAllowableIncome = fct_relevel(rent$MaxAllowableIncome, "0%-30%", "31%-40%", "41%-50%", "51%-60%", "61%-65%", "66%-70%", "71%-80%", "81%-90%", "91%-100%")
-rent$MedianInitialLegalRent = as.numeric(gsub(",", "", rent$MedianActualRent))
+rent$MedianActualRent = as.numeric(gsub(",", "", rent$MedianActualRent))
 ```
 
 ```{r}
@@ -26,7 +20,60 @@ project = subset(project, select = -c(BIN) )
 # remove rows with NAs
 project = na.omit(project)
 rent = na.omit(rent)
+
+# drop unused levels and reorder levels
+rent$BedroomSize = droplevels(rent$BedroomSize)
+rent$BedroomSize = fct_relevel(rent$BedroomSize, "STUDIO")
+
+# merge two data sets together
+data = merge(project, rent, by.x = "Building.ID", by.y = "BuildingID")
+
+# remove outliers with an extreme large rent
+#boxplot(data$MedianActualRent)
+#head(sort(data$MedianActualRent, decreasing = T), 10)
+data = data[-which.max(data[, "MedianActualRent"]),]
 ```
+
+```{r}
+subdf = data[, c("Borough", "MedianActualRent", "BedroomSize")]
+bor = c(rep("Staten Island", 2), "Bronx", "Manhattan", "Staten Island", "Bronx", "Manhattan", "Queens", "Staten Island")
+mar = rep(0, 9)
+bs = c("3-BR", "4-BR", rep("5-BR", 3), rep("6-BR",4))
+add2 = data.frame(bor, mar, bs)
+names(add2) = c("Borough", "MedianActualRent", "BedroomSize")
+subdf2 = rbind(subdf, add2)
+subdf2$Borough = as.factor(subdf2$Borough)
+
+ggplot(subdf2, aes(BedroomSize, MedianActualRent, fill = Borough)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  labs(title = "Median Actual Rent facet by Bedroom size", x = "Bedroom Size", y = "Rent") +
+  facet_grid(.~BedroomSize, scales = "free_x", space = "free")
+```
+
+According to this bar plot, among apartments with the same bedroom size, apartments in Mahattan have the highest median rent. Also, within a particular borough, the rent of apartments with 3 bedrooms have the highest median rent (except for Bronx). The rent of apartments with less than 4 bedrooms has an increasing trend as the number of bedrooms increase, while apartments with 4 or more bedrooms have lower rent. This shows that apartments in Mahattan have higher rent on average, and apartments with less than 4 bedrooms are more popular in the rental market in New York.
+
+```{r}
+ggplot(data, aes(Borough, MedianActualRent, fill = Reporting.Construction.Type)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  labs(title = "Median Actual Rent facet by Borough", y = "Rent") +
+  facet_grid(.~Borough, scales = "free_x", space = "free")
+```
+
+As shown in the plot, all apartments in this dataset are categorized as new construction or preservation. From the plot, we could see that preserved apartments have higher median rent than new constructed apartments. Difference in rent between the two categories is the largest in Manhattan, and smallest in Bronx and Staten Island. Since people may worried that new constructed aparments have air polution, or the apartments may located far from downtown, the rent of new constructed apartments may results in lower rent.
+
+```{r}
+library(ggridges)
+ggplot(data, aes(MedianActualRent, Prevailing.Wage.Status)) +
+  geom_density_ridges() + 
+  labs(title = "Median Actual Rent vs Prevailing Wage", y = "Rent")
+```
+
+All apartments in this data set are categorized into two groups according to whether they are subject to the prevailing wage requirements. From the plot, we could see that apartments that are subject to the requirements have higher mean than other apartments. The median rent of apartments without prevailing wage requirements are mainly in between 800 and 1100 dollars, while the median rent for other apartments has a larger range. This matches our intuition: in order to pay give prevailing wage to its service workers, some apartments might need to request a higher rent.
+
+
+## Analysis on Number of Projects by Time
+
+Walking on the streets of New York, we often find scaffolding on the side of the road, which means that the building near us is being built or remodeled. This kind of construction or reconstruction are happening in many places at the same time every day. We want to explore the changes in such projects in different statuses over previous several year in various aspects and to understand the pattern of apartments in New York so that we can have a better view about changes in this city over years.
 
 ```{r}
 library(tidyverse)
@@ -175,5 +222,5 @@ ggplot(data = project_num_df_2, aes(x = Year, y = n, label = Year)) +
 
 From the data we can see that, in the year of 2020, the trend before April is quite similar with that of previous years in both starting and completion plots. The number of projects started is even much larger in March than previous years. It makes sense because in previous plot we see an increasing trend in number of projects started by year. To have larger number projects started in 2020 we need to have larger number in each Month. However, the number drops a lot in April for both projects started and completed, which is the time COVID-19 situation becomes serious in NYC. Therefore, our thoughts that the process of projects is largely affected by the epidemic is confirmed here.
 
-We can also see an interesting pattern in these plots: the projects are mostly started in June and December, and the number started in June is larger than December. Similarly in plots with number completed, the projects are largely completed in summer and winter. Our explanation is that projects usually take 6 months or a whole year. But more rigorous analysis requires some domain knowledge in other fields such as archituecture.
+We can also see an interesting pattern in these plots: the projects are mostly started in June and December, and the number started in June is larger than December. Similarly in plots with number completed, the projects are largely completed in summer and winter. Our explanation is that projects usually take 6 months or a whole year. But more rigorous analysis requires some domain knowledge in other fields such as architecture.
 
