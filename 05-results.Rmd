@@ -13,62 +13,6 @@ rent$MaxAllowableIncome = fct_relevel(rent$MaxAllowableIncome, "0%-30%", "31%-40
 rent$MedianActualRent = as.numeric(gsub(",", "", rent$MedianActualRent))
 ```
 
-```{r}
-# remove columns that around or more than 50% values are NAs
-project = subset(project, select = -c(BIN) )
-
-# remove rows with NAs
-project = na.omit(project)
-rent = na.omit(rent)
-
-# drop unused levels and reorder levels
-rent$BedroomSize = droplevels(rent$BedroomSize)
-rent$BedroomSize = fct_relevel(rent$BedroomSize, "STUDIO")
-
-# merge two data sets together
-data = merge(project, rent, by.x = "Building.ID", by.y = "BuildingID")
-
-# remove outliers with an extreme large rent
-#boxplot(data$MedianActualRent)
-#head(sort(data$MedianActualRent, decreasing = T), 10)
-data = data[-which.max(data[, "MedianActualRent"]),]
-```
-
-```{r}
-subdf = data[, c("Borough", "MedianActualRent", "BedroomSize")]
-bor = c(rep("Staten Island", 2), "Bronx", "Manhattan", "Staten Island", "Bronx", "Manhattan", "Queens", "Staten Island")
-mar = rep(0, 9)
-bs = c("3-BR", "4-BR", rep("5-BR", 3), rep("6-BR",4))
-add2 = data.frame(bor, mar, bs)
-names(add2) = c("Borough", "MedianActualRent", "BedroomSize")
-subdf2 = rbind(subdf, add2)
-subdf2$Borough = as.factor(subdf2$Borough)
-
-ggplot(subdf2, aes(BedroomSize, MedianActualRent, fill = Borough)) +
-  geom_bar(position = "dodge", stat = "identity") + 
-  labs(title = "Median Actual Rent facet by Bedroom size", x = "Bedroom Size", y = "Rent") +
-  facet_grid(.~BedroomSize, scales = "free_x", space = "free")
-```
-
-According to this bar plot, among apartments with the same bedroom size, apartments in Mahattan have the highest median rent. Also, within a particular borough, the rent of apartments with 3 bedrooms have the highest median rent (except for Bronx). The rent of apartments with less than 4 bedrooms has an increasing trend as the number of bedrooms increase, while apartments with 4 or more bedrooms have lower rent. This shows that apartments in Mahattan have higher rent on average, and apartments with less than 4 bedrooms are more popular in the rental market in New York.
-
-```{r}
-ggplot(data, aes(Borough, MedianActualRent, fill = Reporting.Construction.Type)) +
-  geom_bar(position = "dodge", stat = "identity") + 
-  labs(title = "Median Actual Rent facet by Borough", y = "Rent") +
-  facet_grid(.~Borough, scales = "free_x", space = "free")
-```
-
-As shown in the plot, all apartments in this dataset are categorized as new construction or preservation. From the plot, we could see that preserved apartments have higher median rent than new constructed apartments. Difference in rent between the two categories is the largest in Manhattan, and smallest in Bronx and Staten Island. Since people may worried that new constructed aparments have air polution, or the apartments may located far from downtown, the rent of new constructed apartments may results in lower rent.
-
-```{r}
-library(ggridges)
-ggplot(data, aes(MedianActualRent, Prevailing.Wage.Status)) +
-  geom_density_ridges() + 
-  labs(title = "Median Actual Rent vs Prevailing Wage", y = "Rent")
-```
-
-All apartments in this data set are categorized into two groups according to whether they are subject to the prevailing wage requirements. From the plot, we could see that apartments that are subject to the requirements have higher mean than other apartments. The median rent of apartments without prevailing wage requirements are mainly in between 800 and 1100 dollars, while the median rent for other apartments has a larger range. This matches our intuition: in order to pay give prevailing wage to its service workers, some apartments might need to request a higher rent.
 
 
 ## Analysis on Number of Projects by Time
@@ -233,3 +177,60 @@ knitr::include_graphics("Median Acrual Rent Facet by Max allowable Income.png")
 ```
 
 Max Allowable Income known as MAI, refers to income limit for an affordable housing program with the maximum amount of income a household can earn to qualify to receive assistance. AMI that lower than 30% represents the extremely low income, 40% - 90% represents low income, 90% - 120% represents moderate income, 130% - 160% represents middle income, and > 170% represents high income. According to this graph, we observe that the family with MAI percentage lower than 90% are more likely to live in the houses with 3-4 bedrooms in NYC. The same bedroom size houses percentage decrease dramatically for family with MAI of 91% and higher percentage. At the same time, the studio percentage owned by 91% - 120% MAI increases a lot. For MAI percentage higher than 170%, we could see the disappear of 5- or 6-bedroom houses. So even the whole unit price of 4-6-bedroom houses is high, but it is more economical for a large family. And we discover that moderate income family are more likely to rent studio, which might because of the out-of-state students/single white collar who work in NYC.
+
+```{r}
+# remove columns that around or more than 50% values are NAs
+project = subset(project, select = -c(BIN) )
+
+# remove rows with NAs
+project = na.omit(project)
+rent = na.omit(rent)
+
+# drop unused levels and reorder levels
+rent$BedroomSize = droplevels(rent$BedroomSize)
+rent$BedroomSize = fct_relevel(rent$BedroomSize, "STUDIO")
+
+# merge two data sets together
+data = merge(project, rent, by.x = "Building.ID", by.y = "BuildingID")
+
+# remove outliers with an extreme large rent
+#boxplot(data$MedianActualRent)
+#head(sort(data$MedianActualRent, decreasing = T), 10)
+data = data[-which.max(data[, "MedianActualRent"]),]
+```
+
+```{r}
+subdf = data[, c("Borough", "MedianActualRent", "BedroomSize")]
+bor = c(rep("Staten Island", 2), "Bronx", "Manhattan", "Staten Island", "Bronx", "Manhattan", "Queens", "Staten Island")
+mar = rep(0, 9)
+bs = c("3-BR", "4-BR", rep("5-BR", 3), rep("6-BR",4))
+add2 = data.frame(bor, mar, bs)
+names(add2) = c("Borough", "MedianActualRent", "BedroomSize")
+subdf2 = rbind(subdf, add2)
+subdf2$Borough = as.factor(subdf2$Borough)
+
+ggplot(subdf2, aes(BedroomSize, MedianActualRent, fill = Borough)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  labs(title = "Median Actual Rent facet by Bedroom size", x = "Bedroom Size", y = "Rent") +
+  facet_grid(.~BedroomSize, scales = "free_x", space = "free")
+```
+
+According to this bar plot, among apartments with the same bedroom size, apartments in Mahattan have the highest median rent. Also, within a particular borough, the rent of apartments with 3 bedrooms have the highest median rent (except for Bronx). The rent of apartments with less than 4 bedrooms has an increasing trend as the number of bedrooms increase, while apartments with 4 or more bedrooms have lower rent. This shows that apartments in Mahattan have higher rent on average, and apartments with less than 4 bedrooms are more popular in the rental market in New York.
+
+```{r}
+ggplot(data, aes(Borough, MedianActualRent, fill = Reporting.Construction.Type)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  labs(title = "Median Actual Rent facet by Borough", y = "Rent") +
+  facet_grid(.~Borough, scales = "free_x", space = "free")
+```
+
+As shown in the plot, all apartments in this dataset are categorized as new construction or preservation. From the plot, we could see that preserved apartments have higher median rent than new constructed apartments. Difference in rent between the two categories is the largest in Manhattan, and smallest in Bronx and Staten Island. Since people may worried that new constructed aparments have air polution, or the apartments may located far from downtown, the rent of new constructed apartments may results in lower rent.
+
+```{r}
+library(ggridges)
+ggplot(data, aes(MedianActualRent, Prevailing.Wage.Status)) +
+  geom_density_ridges() + 
+  labs(title = "Median Actual Rent vs Prevailing Wage", y = "Rent")
+```
+
+All apartments in this data set are categorized into two groups according to whether they are subject to the prevailing wage requirements. From the plot, we could see that apartments that are subject to the requirements have higher mean than other apartments. The median rent of apartments without prevailing wage requirements are mainly in between 800 and 1100 dollars, while the median rent for other apartments has a larger range. This matches our intuition: in order to pay give prevailing wage to its service workers, some apartments might need to request a higher rent.

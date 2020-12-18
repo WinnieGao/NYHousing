@@ -28,7 +28,9 @@ rent$BedroomSize = fct_relevel(rent$BedroomSize, "STUDIO")
 data = merge(project, rent, by.x = "Building.ID", by.y = "BuildingID")
 
 ggplot(data, aes(1: nrow(data), MedianActualRent)) +
-  geom_point(alpha = 0.8)
+  geom_point(alpha = 0.8) +
+  xlab("index") +
+  labs(title = "Scatterplot of MedianActualRent")
 ```
 
 From the scatterplot of the `MedianActualRent` column, we could clearly see that there is one point with value larger than 10,000 that is far from all other data points. Thus, we could take this point as an outlier and remove it from the dataset.
