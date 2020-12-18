@@ -1,0 +1,9 @@
+introduction
+data-sources
+data-transformation
+missing-values
+results
+analysis-on-number-of-projects-by-time
+analysis-of-the-median-actual-rent-of-the-building
+interactive-component
+conclusion

@@ -7,3 +7,14 @@ site: bookdown::bookdown_site
 
 # Introduction
 
+New York City is among the most expensive housing markets around the world. Every year huge amount of population moves in and out of New York City, leading to an active and competitive housing market. House rent has became a major part of living expenses for people in NYC, especially for people without high salaries. We chose this topic because as students, apartment rent is one of the biggest expenses while we are in NYC. Before moving into this city, we are curious about questions like, what is the market like? What kinds of apartments that fit me most? Thus, we would like to get to know these by doing this project.
+
+For this project, we would like to answer the following three questions:
+
+- What is the distribution of property values in New York City?
+
+- What suggestions would you make to people who would like to buy investment property in NYC? 
+
+- Compared with previous several years, what changes in NYC Housing in terms of pricing, project activities, etc.?
+
+
