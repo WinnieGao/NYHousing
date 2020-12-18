@@ -226,7 +226,7 @@ We can also see an interesting pattern in these plots: the projects are mostly s
 
 ## Analysis of the Median Actual Rent of the building
 
-In the discussion of house property, price is absolutely what people concerned the most. What is the relationship with the house rent price, the bedroom size of the house and the Income level?
+In the discussion of house property, price is absolutely what people concerned the most. IN NYC, what is the relationship with the house rent price, the bedroom size of the house and the Income level?
 
 ```{r pressure, echo=FALSE,out.width = "80%",fig.align='center'}
 knitr::include_graphics("Median Acrual Rent Facet by Max allowable Income.png")
