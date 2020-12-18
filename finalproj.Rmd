@@ -1,0 +1,414 @@
+--- 
+title: "New York Housing"
+author: "Winnie Gao, Lingxuan Gu, Wenjie Xie"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+---
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+# Introduction
+
+
+<!--chapter:end:index.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Data sources
+
+
+The data sets we are going to use in our analyses come from NEW YORK Open Data, a popular website with various types of official data sets published by New York City agencies. To explore the rental apartments in NYC, we need to know some basic information about buildings, such as the time the buildings start to be built and completed, statistics about different apartment types, etc. Our first data set is Housing New York Units by Building, in which multiple information related to New York apartment information from 2014/01/01 to 2020/09/30 is collected: building id, construction type and counting of apartments with different number of bedrooms and number of units in the rent that are affordable to different earning populations. Since we also consider to explore spatial distribution about NYC apartments, location information, such as census tract, zip code, longitude and latitude, are also included in the data set. The type of variables are mostly number, basic text and date/time. There are 4,656 rows of building records in total and each row is a Housing Preservation and Development(HPD) building. The data type of features can be numeric, basic text and date.
+
+Meanwhile, the pricing of the apartments in NYC is also a hot topic we want to explore. Unfortunately, apartment prices are not recorded in this data set. In this case, we are going to use another data set Local Law 44 Unit Income Rent which includes the number of bedrooms disaggregated by maximum allowable household income and initial legal and actual rents for each building in a Local Law 44 Housing Development Project. This data set do not include price information for all apartments, but, as a subset of all apartments, we can focus on this data set and make conclusions that can be generalized to all apartments in NYC. In this data set, building id, low/median/high initial and actual rent and total units number are recorded. Types of variables are number and plain text. There are in total 12597 rows of building records in this data set, each row is a bedroom Area Median Income(AMI) distribution.
+
+The main issue of the second data set, Local Law 44 Unit Income Rent, is that there are a lot of missing values on the columns of initial and actual rent price. After observing the data set, we realize that all row with missing initial rents do not actual rents at the same time, and some rows only have actual rents missing Therefore, we can assume that the rows with missing values are those not rented, which can be disregarded during our research work. 
+
+
+<!--chapter:end:02-data.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Data transformation
+
+We download the two data sets mentioned in previous chapter directly from New York Open Data website in csv format so that the files can be easily read by R. After observing the data set, we notice that, in the data sets, NA are represented in different ways, using $"----"$ or $"\ "$(white space), which can not be directly identified as NA by r. So our first step is to replace these $“----”$ as NA. Recoding work is also done on some columns. In column MaxAllowableIncome” are same ranges for income such as "0%-30%" or "31%-40%" initially with levels in random orders. For future potential visualization work, it is better to reorder the levels into conceptually ascending order. Also, the numbers in the date set larger than 1000 are separated with commas. We need to remove these commas from the numbers and change their column types to numeric. Meanwhile, the date are in the format of MM-DD-YY in type of string. Data analysis and visualization work will be more convenient if we first change their type to date and use the format of YY-MM-DD.
+
+After observing the patterns of NA values, we can confirm that the columns with around or more than 50% NAs are those columns that we do not really need for future analysis work. After removing these features, we can confirm that NAs in the rest columns can be roughly treated as randomly generated. For the rest of the data sets, all data points with NAs are removed. In other words, we also remove the entire row with NA appearing.a
+
+Our data are recorded in two separate files with different features: one for rent related information and the other for geography and housing related information. Combining two data sets will allow us to have more insights on our information. Therefore, we also need to merge them by their building ID.
+
+```{r}
+boxplot(data$MedianActualRent)
+#head(sort(data$MedianActualRent, decreasing = T), 10)
+```
+
+From the boxplot of the `MedianActualRent` column, we could clearly see that there is one point with value larger than 10,000 that is far from all other data points. Thus, we could take this point as an outlier and remove it from the dataset.
+
+<!--chapter:end:03-cleaning.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Missing values
+
+Before we can really start the analysis work, we need to carefully observe the missing values and the patterns to make sure that the so that it is reasonable to remove those missing values. Otherwise, we have to replace these missing values with different numbers according to some domain knowledge or find some other data resources to work on.
+
+We will first look at the Local Law 44 Unit Income Rent data.
+
+```{r}
+library(ggplot2)
+rent = read.csv("Local_Law_44_-_Unit_Income_Rent.csv", stringsAsFactors = TRUE, na.strings=c(" ", "","NA"))
+project = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
+
+
+
+# rent plot by columns
+na_perc = as.data.frame(apply(rent, 2, function(col) sum(is.na(col)) / length(col)))
+na_perc$columns = as.factor(row.names(na_perc))
+row.names(na_perc) = 1:nrow(na_perc)
+names(na_perc) = c("percent", "columns")
+
+ggplot(na_perc, aes(x = reorder(columns, -percent*100), y = percent))+
+  geom_col()+
+  labs(x = "columns")+
+  ggtitle("Percentage of Missing Values by Columns")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+The histogram includes all variables in the data set and we calculate the percentage of missing values in each variables. It turns out that the missing values mostly appear in the columns related to Initial Legal Rent. Even though initial legal rent does provide some information about the apartments, it makes more sense to use actual rent rather than initial rent since it is more closely related to people's daily life and it represents more about how much people actually pay for the apartments. Therefore, directly removing these columns will not influence our research. Meanwhile, we also notice that there are a number of missing values in columns related to actual rent. To determine how we should treat them, we need to understand their distributions or patterns first. Missing values are also included in the bedroom size and building id, columns unrelated to our project. So we will remove them. 
+
+Now, we are going to look in to the patterns of missing values in each variables.
+
+
+**Patterns of Missing Values**
+```{r}
+library(extracat)
+visna(rent, sort = "r")
+```
+
+The plot shows that the missing patterns of the actual rent variables is not quite associated with values of other variables. However, we notice that there are big gaps in the graph, meaning that there are a number of consecutive rows with missing actual rent values. After look into the data set, we realize that the data with same project id will have either all missing values or no missing values in actual rent. It is reasonable to assume that the rows with missing actual values are from uncompleted projects. Since we more care about the information of apartments that are actually rented, we can directly remove these rows with missing actual rent.
+
+
+```{r}
+# project plot by columns
+na_perc = as.data.frame(apply(project, 2, function(col) sum(is.na(col)) / length(col)))
+na_perc$columns = as.factor(row.names(na_perc))
+row.names(na_perc) = 1:nrow(na_perc)
+names(na_perc) = c("percent", "columns")
+#head(na_perc)
+
+ggplot(na_perc, aes(x = reorder(columns, -percent), y = percent))+
+  geom_col()+
+  labs(x = "columns")+
+  ggtitle("Percentage of Missing Values by Columns")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+The histogram shows that, the data set Housing New York Units by Building also have a few columns with missing values. Column `BIN` has the highest percentage of missing values and it is about 47%. Columns `Latitude..Internal`, `Longitude..Internal`, `BBL`, `Latitude`, `Longitude`, `Postcode`, `Building.ID` all have percentages between 20%-25%. Column `Council.Distinct` has a few missing values and other columns have no missing values. Among these variables, `BIN`, `BBL` and `Building.ID` are not related to our project, and we will remove these columns. `Latitude..Internal` and `Longitude..Internal` is not needed because we will use `Latitude` and `Longitude`. For our work in terms of spatial information, we will use census tract or latitude longitude only. Therefore, all the columns with missing values can be directly removed.
+
+
+```{r}
+# project plot by borough
+library(dplyr)
+bor_perc = c()
+borough = unique(project$Borough)
+for (i in 1:length(borough)) {
+  bor_perc[i] = project %>% filter(Borough == borough[i]) %>% is.na(.) %>% mean()
+}
+df = data.frame(borough, bor_perc)
+
+ggplot(df, aes(x = reorder(borough, -bor_perc), y = bor_perc))+
+  geom_col()+
+  labs(x = "borough", y = "percentage")+
+  ggtitle("Percentage of Missing Values by Borough")
+```
+
+Since we are also curious about spatial distribution of missing values, we plot the percentage of missing values for different boroughs. Staten Island has the highest percentage of missing values and Manhattan has the lowest. Interestingly, the percentage of missing values are roughly proportional to the driving distances to Manhattan.
+
+
+
+<!--chapter:end:04-missing.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Results
+
+
+```{r}
+proj = read.csv("Housing_New_York_Units_by_Building.csv", stringsAsFactors = TRUE, na.strings=c("----", "","NA"))
+project = proj
+rent = read.csv("Local_Law_44_-_Unit_Income_Rent.csv", stringsAsFactors = TRUE, na.strings=c(" ", "","NA"))
+```
+
+```{r}
+library(forcats)
+rent$MaxAllowableIncome = fct_relevel(rent$MaxAllowableIncome, "0%-30%", "31%-40%", "41%-50%", "51%-60%", "61%-65%", "66%-70%", "71%-80%", "81%-90%", "91%-100%")
+rent$MedianActualRent = as.numeric(gsub(",", "", rent$MedianActualRent))
+```
+
+```{r}
+# remove columns that around or more than 50% values are NAs
+project = subset(project, select = -c(BIN) )
+
+# remove rows with NAs
+project = na.omit(project)
+rent = na.omit(rent)
+
+# drop unused levels and reorder levels
+rent$BedroomSize = droplevels(rent$BedroomSize)
+rent$BedroomSize = fct_relevel(rent$BedroomSize, "STUDIO")
+
+# merge two data sets together
+data = merge(project, rent, by.x = "Building.ID", by.y = "BuildingID")
+
+# remove outliers with an extreme large rent
+#boxplot(data$MedianActualRent)
+#head(sort(data$MedianActualRent, decreasing = T), 10)
+data = data[-which.max(data[, "MedianActualRent"]),]
+```
+
+```{r}
+subdf = data[, c("Borough", "MedianActualRent", "BedroomSize")]
+bor = c(rep("Staten Island", 2), "Bronx", "Manhattan", "Staten Island", "Bronx", "Manhattan", "Queens", "Staten Island")
+mar = rep(0, 9)
+bs = c("3-BR", "4-BR", rep("5-BR", 3), rep("6-BR",4))
+add2 = data.frame(bor, mar, bs)
+names(add2) = c("Borough", "MedianActualRent", "BedroomSize")
+subdf2 = rbind(subdf, add2)
+subdf2$Borough = as.factor(subdf2$Borough)
+
+ggplot(subdf2, aes(BedroomSize, MedianActualRent, fill = Borough)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  labs(title = "Median Actual Rent facet by Bedroom size", x = "Bedroom Size", y = "Rent") +
+  facet_grid(.~BedroomSize, scales = "free_x", space = "free")
+```
+
+According to this bar plot, among apartments with the same bedroom size, apartments in Mahattan have the highest median rent. Also, within a particular borough, the rent of apartments with 3 bedrooms have the highest median rent (except for Bronx). The rent of apartments with less than 4 bedrooms has an increasing trend as the number of bedrooms increase, while apartments with 4 or more bedrooms have lower rent. This shows that apartments in Mahattan have higher rent on average, and apartments with less than 4 bedrooms are more popular in the rental market in New York.
+
+```{r}
+ggplot(data, aes(Borough, MedianActualRent, fill = Reporting.Construction.Type)) +
+  geom_bar(position = "dodge", stat = "identity") + 
+  labs(title = "Median Actual Rent facet by Borough", y = "Rent") +
+  facet_grid(.~Borough, scales = "free_x", space = "free")
+```
+
+As shown in the plot, all apartments in this dataset are categorized as new construction or preservation. From the plot, we could see that preserved apartments have higher median rent than new constructed apartments. Difference in rent between the two categories is the largest in Manhattan, and smallest in Bronx and Staten Island. Since people may worried that new constructed aparments have air polution, or the apartments may located far from downtown, the rent of new constructed apartments may results in lower rent.
+
+```{r}
+library(ggridges)
+ggplot(data, aes(MedianActualRent, Prevailing.Wage.Status)) +
+  geom_density_ridges() + 
+  labs(title = "Median Actual Rent vs Prevailing Wage", y = "Rent")
+```
+
+All apartments in this data set are categorized into two groups according to whether they are subject to the prevailing wage requirements. From the plot, we could see that apartments that are subject to the requirements have higher mean than other apartments. The median rent of apartments without prevailing wage requirements are mainly in between 800 and 1100 dollars, while the median rent for other apartments has a larger range. This matches our intuition: in order to pay give prevailing wage to its service workers, some apartments might need to request a higher rent.
+
+
+## Analysis on Number of Projects by Time
+
+Walking on the streets of New York, we often find scaffolding on the side of the road, which means that the building near us is being built or remodeled. This kind of construction or reconstruction are happening in many places at the same time every day. We want to explore the changes in such projects in different statuses over previous several year in various aspects and to understand the pattern of apartments in New York so that we can have a better view about changes in this city over years.
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+proj$Project.Start.Date = as.Date(proj$Project.Start.Date, format ="%m/%d/%Y")
+proj$Project.Completion.Date = as.Date(proj$Project.Completion.Date, format ="%m/%d/%Y")
+
+theme_dotplot <- theme_bw(13) +
+    theme(axis.text.y = element_text(size = rel(.75)),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size = rel(.75)),
+        panel.grid.major.x = element_blank(),
+        panel.grid.major.y = element_line(size = 0.5),
+        panel.grid.minor.x = element_blank())
+
+project_start = data.frame("Year" = as.Date(cut(proj$Project.Start.Date, breaks = "year")), 
+                         "Project" = proj$Building.ID)
+project_start = project_start %>%
+  group_by(Year) %>%
+  count()
+project_end = data.frame("Year" = proj$Project.Completion.Date, 
+                         "Project" = proj$Building.ID)
+project_end = project_end %>% drop_na()
+project_end$Year = as.Date(cut(project_end$Year, breaks = "year"))
+
+project_end = project_end %>%
+  group_by(Year) %>%
+  count()
+
+plot2 = merge(project_start, project_end, by = "Year", all.x = TRUE)
+plot2[is.na(plot2)] = 0
+
+tidydf = plot2 %>%
+  rename(Start = "n.x", Complete = "n.y",) %>%
+  gather(key = "Type", value = "Number", "Start", "Complete")
+tidydf$Year = as.Date(cut(tidydf$Year, breaks = "month"))
+
+ggplot(tidydf, aes(Number, Year, color = Type)) +
+  geom_point() + 
+  #scale_y_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
+  ggtitle("Number of projects started and completed each year 2014-2020") + 
+  ylab("") +
+  theme_dotplot +
+  coord_flip()
+```
+
+From the dot plot on number of projects started and completed, we first notice that the number of projects started are roughly the same for previous 5 years and 2018 has highest number of projects started. The trend of number of projects completed has an obvious pattern: except for 2020, the number of projects completed increases by year. When carefully look into the data plot, we also see that the year of 2020 has the lowest number both on projects started and completed. There are two potential reasons. First, our data set has records up to 2020-09, meaning that, compared with previous years, 2020 have three more months to have projects started or completed so that the two dots can be higher in the plot if we review this plot after several months. However, However, based on the current data, even if the last three months of 2020 are recorded, the number of projects are still much smaller than previous years. Therefore, the second reason is that, the current COVID-19 situation has largely affected the process of each project.
+
+In order to verify our conjecture, we separate each dot in previous plot into 12 dots, each representing a month. To avoid having too many data points at the same plot, we plot number of project of started and completed into two different plots.
+
+
+
+```{r}
+project_num = data.frame("Year" = as.Date(cut(proj$Project.Start.Date, breaks = "month")), 
+                         "Project" = proj$Building.ID)
+
+project_num_2 = data.frame("Year" = as.Date(cut(proj$Project.Completion.Date, breaks = "month")), 
+                         "Project" = proj$Building.ID)
+project_num_2 = na.omit(project_num_2) 
+
+
+project_num_df = project_num %>%
+  group_by(Year) %>%
+  count()
+
+project_num_df_2 = project_num_2 %>%
+  group_by(Year) %>%
+  count()
+
+#project_num_df_2
+
+ggplot(data = project_num_df, aes(x = Year, y = n, label = Year)) + 
+  geom_line() +
+  geom_point() +
+  #geom_text() +
+  #geom_text(size=0.5) + 
+  annotate(geom="text", x=as.Date("2014-06-01"), y=219, label="2014-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2014-12-01"), y=182, label="2014-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2015-06-01"), y=238, label="2015-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2015-12-01"), y=159, label="2015-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2016-06-01"), y=304, label="2016-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2016-12-01"), y=113, label="2016-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2017-06-01"), y=335, label="2017-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2017-12-01"), y=64, label="2017-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2018-06-01"), y=239, label="2018-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2018-12-01"), y=88, label="2018-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2019-06-01"), y=375, label="2019-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2019-12-01"), y=91, label="2019-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2020-03-01"), y=125, label="2020-03",
+              color="black") +
+  annotate(geom="text", x=as.Date("2020-06-01"), y=72, label="2020-06",
+              color="black") +
+  scale_x_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
+  xlab("Year") +
+  ylab("Number of Buildings Started") +
+  ggtitle("Number of Buildings Started per Month 2014/01-2020/06") +
+  theme_grey(13)
+
+ggplot(data = project_num_df_2, aes(x = Year, y = n, label = Year)) + 
+  geom_line() +
+  geom_point() +
+  #geom_text() +
+  #geom_text(size=0.5) + 
+  annotate(geom="text", x=as.Date("2014-06-01"), y=41, label="2014-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2015-06-01"), y=38, label="2015-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2015-12-01"), y=89, label="2015-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2016-06-01"), y=62, label="2016-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2016-12-01"), y=104, label="2016-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2017-06-01"), y=243, label="2017-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2017-12-01"), y=52, label="2017-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2018-07-01"), y=111, label="2018-07",
+              color="black") +
+  annotate(geom="text", x=as.Date("2018-12-01"), y=79, label="2018-12",
+              color="black") +
+  annotate(geom="text", x=as.Date("2019-06-01"), y=206, label="2019-06",
+              color="black") +
+  annotate(geom="text", x=as.Date("2019-12-01"), y=60, label="2019-12",
+              color="black") +
+  scale_x_date(date_breaks = "1 year", date_minor_breaks = "1 month", date_labels = "%Y") +
+  xlab("Year") +
+  ylab("Number of Buildings Completed") +
+  ggtitle("Number of Buildings Completed per Month 2014/01-2020/06") +
+  theme_grey(13)
+```
+
+From the data we can see that, in the year of 2020, the trend before April is quite similar with that of previous years in both starting and completion plots. The number of projects started is even much larger in March than previous years. It makes sense because in previous plot we see an increasing trend in number of projects started by year. To have larger number projects started in 2020 we need to have larger number in each Month. However, the number drops a lot in April for both projects started and completed, which is the time COVID-19 situation becomes serious in NYC. Therefore, our thoughts that the process of projects is largely affected by the epidemic is confirmed here.
+
+We can also see an interesting pattern in these plots: the projects are mostly started in June and December, and the number started in June is larger than December. Similarly in plots with number completed, the projects are largely completed in summer and winter. Our explanation is that projects usually take 6 months or a whole year. But more rigorous analysis requires some domain knowledge in other fields such as architecture.
+
+
+<!--chapter:end:05-results.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Interactive component
+
+
+```{r, echo=FALSE}
+htmltools::includeHTML("inter.html")
+htmltools::includeScript("interactive.js")
+```
+
+<!--chapter:end:06-interactive.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Conclusion
+
+
+<!--chapter:end:07-conclusion.Rmd-->
+
